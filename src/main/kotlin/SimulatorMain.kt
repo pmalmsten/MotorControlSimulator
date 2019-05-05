@@ -30,16 +30,19 @@ fun runSimulation(csv: CSVWriter) {
 
     for (currentTimeNanos in SIMULATION_TICK_NANOS..SIMULATION_DURATION_NANOS step SIMULATION_TICK_NANOS) {
 
-        val motorTorqueNM = motor.computeTorque(
-            pointMassPose.pose.velocityDegPerS,
-            simulatedDutyCycleAtTime(currentTimeNanos))
+        val torqueNMAtCurrentVelFn = { currentVelDegPerS: Double ->
+            val motorTorqueNM = motor.computeTorque(
+                currentVelDegPerS,
+                simulatedDutyCycleAtTime(currentTimeNanos))
 
-        val netTorqueNM = motorTorqueNM -
-                simulatedFrictionAtVelocity(pointMassPose.pose.velocityDegPerS)
+            val netTorqueNM = motorTorqueNM - simulatedFrictionAtVelocity(currentVelDegPerS)
 
-        pointMassPose = pointMassPose.updatePose(
-            netTorqueNM,
-            SIMULATION_TICK_NANOS / TimeUnit.SECONDS.toNanos(1).toDouble())
+            netTorqueNM
+        }
+
+        pointMassPose = pointMassPose.updatePose(torqueNMAtCurrentVelFn,
+            SIMULATION_TICK_NANOS / TimeUnit.SECONDS.toNanos(1).toDouble()
+        )
 
         csv.writeRecord(mapOf(
             CSVColumn.SIMULATION_TIMESTAMP_SECONDS.fieldName to

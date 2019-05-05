@@ -25,22 +25,30 @@ class RotationalPointMassPose(
 
     private val pointMassAngularInertia = massKg*(radiusM.pow(2))
 
-    fun updatePose(appliedTorqueNM: Double,
+    fun updatePose(currentTorqueNMAtVelocityDegPerS: (currentVelocityDegPerS: Double) -> Double,
                    elapsedTimeS: Double): RotationalPointMassPose {
 
-        val angularDeltaPositionDeg = pose.velocityDegPerS * elapsedTimeS
-        val angularDeltaVDegPerS = pose.accelerationDegPerS2 * elapsedTimeS
+        val currentVelocityDegPerS = pose.velocityDegPerS + deltaVelocityDegPerS(elapsedTimeS)
 
-        val currentAngularAccelDegPerS2 = appliedTorqueNM / pointMassAngularInertia
+        val currentAngularAccelDegPerS2 =
+            currentTorqueNMAtVelocityDegPerS(currentVelocityDegPerS) / pointMassAngularInertia
 
         val newPose = AngularPose(
-            positionDegrees = pose.positionDegrees + angularDeltaPositionDeg,
-            velocityDegPerS = pose.velocityDegPerS + angularDeltaVDegPerS,
+            positionDegrees = pose.positionDegrees + deltaPositionDeg(elapsedTimeS),
+            velocityDegPerS = currentVelocityDegPerS,
             accelerationDegPerS2 = currentAngularAccelDegPerS2,
             jerkDegPerS3 = (currentAngularAccelDegPerS2 - pose.accelerationDegPerS2) / elapsedTimeS
         )
 
         return RotationalPointMassPose(massKg, radiusM, newPose)
+    }
+
+    private fun deltaPositionDeg(elapsedTimeS: Double): Double {
+        return pose.velocityDegPerS * elapsedTimeS
+    }
+
+    private fun deltaVelocityDegPerS(elapsedTimeS: Double): Double {
+        return pose.accelerationDegPerS2 * elapsedTimeS
     }
 }
 
