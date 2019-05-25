@@ -1,4 +1,6 @@
+import kotlin.math.abs
 import kotlin.math.pow
+import kotlin.math.sign
 
 class AngularPose(val positionDegrees: Double,
                   val velocityDegPerS: Double,
@@ -10,11 +12,29 @@ class AngularPose(val positionDegrees: Double,
 class DCPermanentMagnetMotor(val maxTorqueNM: Double,
                              val maxVelDegPerS: Double) {
 
-    fun computeTorque(currentVelRPM: Double,
-                      currentDirectionalDutyCyclePercent: Double): Double {
-        val percentMaxTorque = 1 - (currentVelRPM / maxVelDegPerS)
+    init {
+        if (maxVelDegPerS <= 0.0) error("maxVelDegPerS must be > 0.")
+    }
 
-        return percentMaxTorque * currentDirectionalDutyCyclePercent
+    fun computeTorque(currentDegPerS: Double,
+                      currentDirectionalDutyCyclePercent: Double): Double {
+
+        require(currentDirectionalDutyCyclePercent >= -1 && currentDirectionalDutyCyclePercent <= 1)
+        { "currentDirectionalDutyCyclePercent must be between -1 and 1" }
+
+        val isReversingDirection = (sign(currentDegPerS) != 0.0
+                && sign(currentDirectionalDutyCyclePercent) != 0.0
+                && sign(currentDegPerS) != sign(currentDirectionalDutyCyclePercent))
+
+        val reversingSign = if (isReversingDirection) -1 else 1
+
+        val absPercentMaxVel = abs(currentDegPerS) / maxVelDegPerS
+
+        // When a permanent mag. DC motor is 'plugging' (force applied is opposite to current direction of travel),
+        // max torque increases as velocity increases (rather than decreases) due to back EMF boost
+        val percentMaxTorque = 1 - reversingSign * absPercentMaxVel
+
+        return percentMaxTorque * currentDirectionalDutyCyclePercent * maxTorqueNM
     }
 }
 
