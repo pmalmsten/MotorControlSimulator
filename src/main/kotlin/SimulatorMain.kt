@@ -16,7 +16,7 @@ enum class CSVColumn(val fieldName: String) {
 
 val CSV_COLUMNS = CSVColumn.values().map { it.fieldName }
 
-fun main(args: Array<String>) {
+fun main() {
     val currentTimeFormatted = DateTimeFormatter.ISO_DATE_TIME.format(LocalDateTime.now())
 
     CSVWriter("simulation_$currentTimeFormatted.csv", CSV_COLUMNS).use {
@@ -25,33 +25,24 @@ fun main(args: Array<String>) {
 }
 
 fun runSimulation(csv: CSVWriter) {
-    var pointMassPose = RotationalPointMassPose(0.3, 0.01, AngularPose())
+    val initialPose = RotationalPointMassPose(0.3, 0.01, AngularPose())
     val motor = DCPermanentMagnetMotor(0.3, 2000.0)
 
+    var motorMassPose = MotorAndRotationalPointMassPose(motor, initialPose)
+
     for (currentTimeNanos in SIMULATION_TICK_NANOS..SIMULATION_DURATION_NANOS step SIMULATION_TICK_NANOS) {
+        val elapsedTimeS = SIMULATION_TICK_NANOS / TimeUnit.SECONDS.toNanos(1).toDouble()
 
-        val torqueNMAtCurrentVelFn = { currentVelDegPerS: Double ->
-            val motorTorqueNM = motor.computeTorque(
-                currentVelDegPerS,
-                simulatedDutyCycleAtTime(currentTimeNanos))
-
-            val netTorqueNM = motorTorqueNM - simulatedFrictionAtVelocity(currentVelDegPerS)
-
-            netTorqueNM
-        }
-
-        pointMassPose = pointMassPose.updatePose(torqueNMAtCurrentVelFn,
-            SIMULATION_TICK_NANOS / TimeUnit.SECONDS.toNanos(1).toDouble()
-        )
+        motorMassPose = motorMassPose.updatePose(simulatedDutyCycleAtTime(currentTimeNanos), elapsedTimeS)
 
         csv.writeRecord(mapOf(
             CSVColumn.SIMULATION_TIMESTAMP_SECONDS.fieldName to
                     currentTimeNanos / TimeUnit.SECONDS.toNanos(1).toDouble(),
 
-            CSVColumn.POSITION_DEG.fieldName to pointMassPose.pose.positionDegrees,
-            CSVColumn.VELOCITY_DEG_PER_S.fieldName to pointMassPose.pose.velocityDegPerS,
-            CSVColumn.ACCEL_DEG_PER_S2.fieldName to pointMassPose.pose.accelerationDegPerS2,
-            CSVColumn.JERK_DEG_PER_S3.fieldName to pointMassPose.pose.jerkDegPerS3
+            CSVColumn.POSITION_DEG.fieldName to motorMassPose.pose.positionDegrees,
+            CSVColumn.VELOCITY_DEG_PER_S.fieldName to motorMassPose.pose.velocityDegPerS,
+            CSVColumn.ACCEL_DEG_PER_S2.fieldName to motorMassPose.pose.accelerationDegPerS2,
+            CSVColumn.JERK_DEG_PER_S3.fieldName to motorMassPose.pose.jerkDegPerS3
         ))
     }
 }
@@ -62,16 +53,4 @@ fun simulatedDutyCycleAtTime(currentTimeNanos: Long): Double {
         1.0
     else
         0.0
-}
-
-fun simulatedTorqueAtTime(currentTimeNanos: Long): Double {
-    return if (currentTimeNanos >= TimeUnit.SECONDS.toNanos(1) &&
-            currentTimeNanos <= TimeUnit.SECONDS.toNanos(5))
-        0.2
-    else
-        0.0
-}
-
-fun simulatedFrictionAtVelocity(currentVelocity: Double): Double {
-    return currentVelocity * 0.0001
 }
