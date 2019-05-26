@@ -14,7 +14,7 @@ internal class RotationalPointMassPoseTest {
     fun simplePointMass() {
         val initialPose = RotationalPointMassPose(1.0, 1.0, AngularPose())
 
-        val poseT1 = initialPose.updatePose({ 1.0 }, 1.0)
+        val poseT1 = initialPose.updatePose({ 1.0 }, 1.0).pose
 
         assertAll("pose T1",
             { assertThat("position", poseT1.pose.positionDegrees, `is`(equalTo(0.0))) },
@@ -23,7 +23,7 @@ internal class RotationalPointMassPoseTest {
             { assertThat("jerk", poseT1.pose.jerkDegPerS3, `is`(equalTo(1.0))) }
         )
 
-        val poseT2 = poseT1.updatePose({ 0.0 }, 1.0)
+        val poseT2 = poseT1.updatePose({ 0.0 }, 1.0).pose
 
         assertAll("pose T2",
             { assertThat("position", poseT2.pose.positionDegrees, `is`(equalTo(0.0))) },
@@ -32,7 +32,7 @@ internal class RotationalPointMassPoseTest {
             { assertThat("jerk", poseT2.pose.jerkDegPerS3, `is`(equalTo(-1.0))) }
         )
 
-        val poseT3 = poseT2.updatePose({ 0.0 }, 1.0)
+        val poseT3 = poseT2.updatePose({ 0.0 }, 1.0).pose
 
         assertAll("pose T3",
             { assertThat("position", poseT3.pose.positionDegrees, `is`(equalTo(1.0))) },
@@ -41,7 +41,7 @@ internal class RotationalPointMassPoseTest {
             { assertThat("jerk", poseT3.pose.jerkDegPerS3, `is`(equalTo(0.0))) }
         )
 
-        val poseT4 = poseT3.updatePose({ -1.0 }, 1.0)
+        val poseT4 = poseT3.updatePose({ -1.0 }, 1.0).pose
 
         assertAll("pose T4",
             { assertThat("position", poseT4.pose.positionDegrees, `is`(equalTo(2.0))) },
@@ -50,7 +50,7 @@ internal class RotationalPointMassPoseTest {
             { assertThat("jerk", poseT4.pose.jerkDegPerS3, `is`(equalTo(-1.0))) }
         )
 
-        val poseT5 = poseT4.updatePose({ 0.0 }, 1.0)
+        val poseT5 = poseT4.updatePose({ 0.0 }, 1.0).pose
 
         assertAll("pose T5",
             { assertThat("position", poseT5.pose.positionDegrees, `is`(equalTo(3.0))) },
@@ -67,7 +67,7 @@ internal class RotationalPointMassPoseTest {
     fun fartherAwayPointMass() {
         val initialPose = RotationalPointMassPose(1.0, 2.0, AngularPose())
 
-        val poseT1 = initialPose.updatePose({ 1.0 }, 1.0)
+        val poseT1 = initialPose.updatePose({ 1.0 }, 1.0).pose
 
         assertAll("pose T1",
             { assertThat("position", poseT1.pose.positionDegrees, `is`(equalTo(0.0))) },
@@ -84,7 +84,7 @@ internal class RotationalPointMassPoseTest {
     fun biggerPointMass() {
         val initialPose = RotationalPointMassPose(2.0, 1.0, AngularPose())
 
-        val poseT1 = initialPose.updatePose({ 1.0 }, 1.0)
+        val poseT1 = initialPose.updatePose({ 1.0 }, 1.0).pose
 
         assertAll("pose T1",
             { assertThat("position", poseT1.pose.positionDegrees, `is`(equalTo(0.0))) },
@@ -102,7 +102,7 @@ internal class RotationalPointMassPoseTest {
             assertThat(currentVelDegPerS, `is`(equalTo(0.0)))
 
             1.0
-        }, 1.0)
+        }, 1.0).pose
 
         assertAll("pose T1",
             { assertThat("position", poseT1.pose.positionDegrees, `is`(equalTo(0.0))) },
@@ -116,7 +116,7 @@ internal class RotationalPointMassPoseTest {
             assertThat(currentVelDegPerS, `is`(equalTo(1.0)))
 
             0.0
-        }, 1.0)
+        }, 1.0).pose
 
         assertAll("pose T2",
             { assertThat("position", poseT2.pose.positionDegrees, `is`(equalTo(0.0))) },
