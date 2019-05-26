@@ -8,11 +8,11 @@ val SIMULATION_TICK_NANOS = TimeUnit.MILLISECONDS.toNanos(2)
 enum class CSVColumn(val fieldName: String) {
     SIMULATION_TIMESTAMP_SECONDS("Simulation Timestamp (s)"),
 
-    POSITION_DEG("Position (Deg)"),
-    VELOCITY_DEG_PER_S("Velocity (Deg/S)"),
-    ACCEL_DEG_PER_S2("Acceleration (Deg/S^2)"),
+    POSITION_RAD("Position (Rad)"),
+    VELOCITY_RAD_PER_S("Velocity (Rad/S)"),
+    ACCEL_RAD_PER_S2("Acceleration (Rad/S^2)"),
     NET_TORQUE_NM("Net Torque (NM)"),
-    JERK_DEG_PER_S3("Jerk (Deg/S^3)"),
+    JERK_RAD_PER_S3("Jerk (Rad/S^3)"),
     MOTOR_DUTY_CYCLE("Motor Duty Cycle (%)")
 }
 
@@ -44,11 +44,11 @@ fun runSimulation(csv: CSVWriter) {
             CSVColumn.SIMULATION_TIMESTAMP_SECONDS.fieldName to
                     currentTimeNanos / TimeUnit.SECONDS.toNanos(1).toDouble(),
 
-            CSVColumn.POSITION_DEG.fieldName to motorMassPose.pose.positionDegrees,
-            CSVColumn.VELOCITY_DEG_PER_S.fieldName to motorMassPose.pose.velocityDegPerS,
+            CSVColumn.POSITION_RAD.fieldName to motorMassPose.pose.positionRad,
+            CSVColumn.VELOCITY_RAD_PER_S.fieldName to motorMassPose.pose.velocityRadPerS,
             CSVColumn.NET_TORQUE_NM.fieldName to updatePoseResult.computedTorqueNM,
-            CSVColumn.ACCEL_DEG_PER_S2.fieldName to motorMassPose.pose.accelerationDegPerS2,
-            CSVColumn.JERK_DEG_PER_S3.fieldName to motorMassPose.pose.jerkDegPerS3,
+            CSVColumn.ACCEL_RAD_PER_S2.fieldName to motorMassPose.pose.accelerationRadPerS2,
+            CSVColumn.JERK_RAD_PER_S3.fieldName to motorMassPose.pose.jerkRadPerS3,
             CSVColumn.MOTOR_DUTY_CYCLE.fieldName to dutyCycle
         ))
     }

@@ -2,33 +2,33 @@ import kotlin.math.abs
 import kotlin.math.pow
 import kotlin.math.sign
 
-class AngularPose(val positionDegrees: Double,
-                  val velocityDegPerS: Double,
-                  val accelerationDegPerS2: Double,
-                  val jerkDegPerS3: Double) {
+class AngularPose(val positionRad: Double,
+                  val velocityRadPerS: Double,
+                  val accelerationRadPerS2: Double,
+                  val jerkRadPerS3: Double) {
     constructor() : this(0.0,0.0,0.0,0.0)
 }
 
 class DCPermanentMagnetMotor(val maxTorqueNM: Double,
-                             val maxVelDegPerS: Double) {
+                             val maxVelRadPerS: Double) {
 
     init {
-        if (maxVelDegPerS <= 0.0) error("maxVelDegPerS must be > 0.")
+        if (maxVelRadPerS <= 0.0) error("maxVelRadPerS must be > 0.")
     }
 
-    fun computeTorque(currentDegPerS: Double,
+    fun computeTorque(currentRadPerS: Double,
                       currentDirectionalDutyCyclePercent: Double): Double {
 
         require(currentDirectionalDutyCyclePercent >= -1 && currentDirectionalDutyCyclePercent <= 1)
         { "currentDirectionalDutyCyclePercent must be between -1 and 1" }
 
-        val isReversingDirection = (sign(currentDegPerS) != 0.0
+        val isReversingDirection = (sign(currentRadPerS) != 0.0
                 && sign(currentDirectionalDutyCyclePercent) != 0.0
-                && sign(currentDegPerS) != sign(currentDirectionalDutyCyclePercent))
+                && sign(currentRadPerS) != sign(currentDirectionalDutyCyclePercent))
 
         val reversingSign = if (isReversingDirection) -1 else 1
 
-        val absPercentMaxVel = abs(currentDegPerS) / maxVelDegPerS
+        val absPercentMaxVel = abs(currentRadPerS) / maxVelRadPerS
 
         // When a permanent mag. DC motor is 'plugging' (force applied is opposite to current direction of travel),
         // max torque increases as velocity increases (rather than decreases) due to back EMF boost
@@ -45,32 +45,31 @@ class RotationalPointMassPose(
 
     private val pointMassAngularInertia = massKg*(radiusM.pow(2))
 
-    fun updatePose(torqueNMToApplyAtNewVelocityDegPerS: (currentVelocityDegPerS: Double) -> Double,
+    fun updatePose(torqueNMToApplyAtNewVelocityRadPerS: (currentVelocityRadPerS: Double) -> Double,
                    elapsedTimeS: Double): UpdatePoseResult {
 
-        val newVelocityDegPerS = pose.velocityDegPerS + deltaVelocityDegPerS(elapsedTimeS)
+        val newVelocityRadPerS = pose.velocityRadPerS + deltaVelocityRadPerS(elapsedTimeS)
 
-        val computedTorqueToApplyNM = torqueNMToApplyAtNewVelocityDegPerS(newVelocityDegPerS)
-        val newAngularAccelDegPerS2 =
-            computedTorqueToApplyNM / pointMassAngularInertia
+        val computedTorqueToApplyNM = torqueNMToApplyAtNewVelocityRadPerS(newVelocityRadPerS)
+        val newAngularAccelRadPerS2 = computedTorqueToApplyNM / pointMassAngularInertia
 
         val newPose = AngularPose(
-            positionDegrees = pose.positionDegrees + deltaPositionDeg(elapsedTimeS),
-            velocityDegPerS = newVelocityDegPerS,
-            accelerationDegPerS2 = newAngularAccelDegPerS2,
-            jerkDegPerS3 = (newAngularAccelDegPerS2 - pose.accelerationDegPerS2) / elapsedTimeS
+            positionRad = pose.positionRad + deltaPositionRad(elapsedTimeS),
+            velocityRadPerS = newVelocityRadPerS,
+            accelerationRadPerS2 = newAngularAccelRadPerS2,
+            jerkRadPerS3 = (newAngularAccelRadPerS2 - pose.accelerationRadPerS2) / elapsedTimeS
         )
 
         return UpdatePoseResult(RotationalPointMassPose(massKg, radiusM, newPose),
             computedTorqueToApplyNM)
     }
 
-    private fun deltaPositionDeg(elapsedTimeS: Double): Double {
-        return pose.velocityDegPerS * elapsedTimeS
+    private fun deltaPositionRad(elapsedTimeS: Double): Double {
+        return pose.velocityRadPerS * elapsedTimeS
     }
 
-    private fun deltaVelocityDegPerS(elapsedTimeS: Double): Double {
-        return pose.accelerationDegPerS2 * elapsedTimeS
+    private fun deltaVelocityRadPerS(elapsedTimeS: Double): Double {
+        return pose.accelerationRadPerS2 * elapsedTimeS
     }
 
     data class UpdatePoseResult(val pose: RotationalPointMassPose,
@@ -85,23 +84,23 @@ class MotorAndRotationalPointMassPose(val motor: DCPermanentMagnetMotor,
     fun updatePose(motorDirectionalDutyCyclePercent: Double,
                    elapsedTimeS: Double): UpdatePoseResult {
 
-        val torqueNMToApplyAtNewVelocityDegPerS = { newVelDegPerS: Double ->
-            val motorTorqueNM = motor.computeTorque(newVelDegPerS, motorDirectionalDutyCyclePercent)
-            val netTorqueNM = motorTorqueNM - simulatedFrictionNMAtVelocity(newVelDegPerS)
+        val torqueNMToApplyAtNewVelocityRadPerS = { newVelRadPerS: Double ->
+            val motorTorqueNM = motor.computeTorque(newVelRadPerS, motorDirectionalDutyCyclePercent)
+            val netTorqueNM = motorTorqueNM - simulatedFrictionNMAtVelocity(newVelRadPerS)
 
             netTorqueNM
         }
 
-        val updatePoseResult = massPose.updatePose(torqueNMToApplyAtNewVelocityDegPerS, elapsedTimeS)
+        val updatePoseResult = massPose.updatePose(torqueNMToApplyAtNewVelocityRadPerS, elapsedTimeS)
 
         return UpdatePoseResult(MotorAndRotationalPointMassPose(motor, updatePoseResult.pose),
             updatePoseResult.computedTorqueNM)
 
     }
 
-    private fun simulatedFrictionNMAtVelocity(currentVelDegPerS: Double): Double {
+    private fun simulatedFrictionNMAtVelocity(currentVelRadPerS: Double): Double {
         // Friction of 10% of max motor torque at max motor speed
-        return (currentVelDegPerS/motor.maxVelDegPerS) * (0.10 * motor.maxTorqueNM)
+        return (currentVelRadPerS/motor.maxVelRadPerS) * (0.10 * motor.maxTorqueNM)
     }
 
     data class UpdatePoseResult(val pose: MotorAndRotationalPointMassPose,

@@ -5,10 +5,10 @@ import org.junit.jupiter.api.Test
 internal class DCPermanentMagnetMotorTest {
 
     private val maxTorqueNM = 1.0
-    private val maxVelDegPerS = 30.0
+    private val maxVelRadPerS = 30.0
     private val maxAllowedError = 0.00001
 
-    private val motor = DCPermanentMagnetMotor(maxTorqueNM, maxVelDegPerS)
+    private val motor = DCPermanentMagnetMotor(maxTorqueNM, maxVelRadPerS)
 
     @Test
     fun motorTorqueAtStopIsMaxTorque_forwardDirection() {
@@ -27,14 +27,14 @@ internal class DCPermanentMagnetMotorTest {
     @Test
     fun motorTorqueAt50PercentMaxVelIs50PercentMaxTorque_forwardDirection() {
         assertThat(
-            motor.computeTorque(maxVelDegPerS / 2.0, 1.0),
+            motor.computeTorque(maxVelRadPerS / 2.0, 1.0),
             `is`(closeTo(maxTorqueNM / 2.0, maxAllowedError)))
     }
 
     @Test
     fun motorTorqueAt50PercentMaxVelIs50PercentMaxTorque_reverseDirection() {
         assertThat(
-            motor.computeTorque(-maxVelDegPerS / 2.0, -1.0),
+            motor.computeTorque(-maxVelRadPerS / 2.0, -1.0),
             `is`(closeTo(-maxTorqueNM / 2.0, maxAllowedError)))
     }
 
@@ -43,7 +43,7 @@ internal class DCPermanentMagnetMotorTest {
         // At 50% max speed, max torque available is 50%
         // At 20% duty cycle, result torque is 20% * 50% = 10% max torque
         assertThat(
-            motor.computeTorque(maxVelDegPerS / 2.0, 0.2),
+            motor.computeTorque(maxVelRadPerS / 2.0, 0.2),
             `is`(closeTo(maxTorqueNM / 10.0, maxAllowedError)))
     }
 
@@ -52,7 +52,7 @@ internal class DCPermanentMagnetMotorTest {
         // At 50% max speed, max torque available is 50%
         // At 20% duty cycle, result torque is 20% * 50% = 10% max torque
         assertThat(
-            motor.computeTorque(-maxVelDegPerS / 2.0, -0.2),
+            motor.computeTorque(-maxVelRadPerS / 2.0, -0.2),
             `is`(closeTo(-maxTorqueNM / 10.0, maxAllowedError)))
     }
 
@@ -61,7 +61,7 @@ internal class DCPermanentMagnetMotorTest {
         // When a permanent mag. DC motor is 'plugging' (force applied is opposite to current direction of travel),
         // max torque increases as velocity increases (rather than decreases) due to back EMF boost
         assertThat(
-            motor.computeTorque(-maxVelDegPerS / 2.0, 1.0),
+            motor.computeTorque(-maxVelRadPerS / 2.0, 1.0),
             `is`(closeTo(1.5*maxTorqueNM, maxAllowedError)))
     }
 
@@ -70,7 +70,7 @@ internal class DCPermanentMagnetMotorTest {
         // When a permanent mag. DC motor is 'plugging' (force applied is opposite to current direction of travel),
         // max torque increases as velocity increases (rather than decreases) due to back EMF boost
         assertThat(
-            motor.computeTorque(maxVelDegPerS / 2.0, -1.0),
+            motor.computeTorque(maxVelRadPerS / 2.0, -1.0),
             `is`(closeTo(-1.5*maxTorqueNM, maxAllowedError)))
     }
 }

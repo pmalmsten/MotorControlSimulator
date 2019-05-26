@@ -17,46 +17,46 @@ internal class RotationalPointMassPoseTest {
         val poseT1 = initialPose.updatePose({ 1.0 }, 1.0).pose
 
         assertAll("pose T1",
-            { assertThat("position", poseT1.pose.positionDegrees, `is`(equalTo(0.0))) },
-            { assertThat("velocity", poseT1.pose.velocityDegPerS, `is`(equalTo(0.0))) },
-            { assertThat("accel", poseT1.pose.accelerationDegPerS2, `is`(equalTo(1.0))) },
-            { assertThat("jerk", poseT1.pose.jerkDegPerS3, `is`(equalTo(1.0))) }
+            { assertThat("position", poseT1.pose.positionRad, `is`(equalTo(0.0))) },
+            { assertThat("velocity", poseT1.pose.velocityRadPerS, `is`(equalTo(0.0))) },
+            { assertThat("accel", poseT1.pose.accelerationRadPerS2, `is`(equalTo(1.0))) },
+            { assertThat("jerk", poseT1.pose.jerkRadPerS3, `is`(equalTo(1.0))) }
         )
 
         val poseT2 = poseT1.updatePose({ 0.0 }, 1.0).pose
 
         assertAll("pose T2",
-            { assertThat("position", poseT2.pose.positionDegrees, `is`(equalTo(0.0))) },
-            { assertThat("velocity", poseT2.pose.velocityDegPerS, `is`(equalTo(1.0))) },
-            { assertThat("accel", poseT2.pose.accelerationDegPerS2, `is`(equalTo(0.0))) },
-            { assertThat("jerk", poseT2.pose.jerkDegPerS3, `is`(equalTo(-1.0))) }
+            { assertThat("position", poseT2.pose.positionRad, `is`(equalTo(0.0))) },
+            { assertThat("velocity", poseT2.pose.velocityRadPerS, `is`(equalTo(1.0))) },
+            { assertThat("accel", poseT2.pose.accelerationRadPerS2, `is`(equalTo(0.0))) },
+            { assertThat("jerk", poseT2.pose.jerkRadPerS3, `is`(equalTo(-1.0))) }
         )
 
         val poseT3 = poseT2.updatePose({ 0.0 }, 1.0).pose
 
         assertAll("pose T3",
-            { assertThat("position", poseT3.pose.positionDegrees, `is`(equalTo(1.0))) },
-            { assertThat("velocity", poseT3.pose.velocityDegPerS, `is`(equalTo(1.0))) },
-            { assertThat("accel", poseT3.pose.accelerationDegPerS2, `is`(equalTo(0.0))) },
-            { assertThat("jerk", poseT3.pose.jerkDegPerS3, `is`(equalTo(0.0))) }
+            { assertThat("position", poseT3.pose.positionRad, `is`(equalTo(1.0))) },
+            { assertThat("velocity", poseT3.pose.velocityRadPerS, `is`(equalTo(1.0))) },
+            { assertThat("accel", poseT3.pose.accelerationRadPerS2, `is`(equalTo(0.0))) },
+            { assertThat("jerk", poseT3.pose.jerkRadPerS3, `is`(equalTo(0.0))) }
         )
 
         val poseT4 = poseT3.updatePose({ -1.0 }, 1.0).pose
 
         assertAll("pose T4",
-            { assertThat("position", poseT4.pose.positionDegrees, `is`(equalTo(2.0))) },
-            { assertThat("velocity", poseT4.pose.velocityDegPerS, `is`(equalTo(1.0))) },
-            { assertThat("accel", poseT4.pose.accelerationDegPerS2, `is`(equalTo(-1.0))) },
-            { assertThat("jerk", poseT4.pose.jerkDegPerS3, `is`(equalTo(-1.0))) }
+            { assertThat("position", poseT4.pose.positionRad, `is`(equalTo(2.0))) },
+            { assertThat("velocity", poseT4.pose.velocityRadPerS, `is`(equalTo(1.0))) },
+            { assertThat("accel", poseT4.pose.accelerationRadPerS2, `is`(equalTo(-1.0))) },
+            { assertThat("jerk", poseT4.pose.jerkRadPerS3, `is`(equalTo(-1.0))) }
         )
 
         val poseT5 = poseT4.updatePose({ 0.0 }, 1.0).pose
 
         assertAll("pose T5",
-            { assertThat("position", poseT5.pose.positionDegrees, `is`(equalTo(3.0))) },
-            { assertThat("velocity", poseT5.pose.velocityDegPerS, `is`(equalTo(0.0))) },
-            { assertThat("accel", poseT5.pose.accelerationDegPerS2, `is`(equalTo(0.0))) },
-            { assertThat("jerk", poseT5.pose.jerkDegPerS3, `is`(equalTo(1.0))) }
+            { assertThat("position", poseT5.pose.positionRad, `is`(equalTo(3.0))) },
+            { assertThat("velocity", poseT5.pose.velocityRadPerS, `is`(equalTo(0.0))) },
+            { assertThat("accel", poseT5.pose.accelerationRadPerS2, `is`(equalTo(0.0))) },
+            { assertThat("jerk", poseT5.pose.jerkRadPerS3, `is`(equalTo(1.0))) }
         )
     }
 
@@ -70,10 +70,10 @@ internal class RotationalPointMassPoseTest {
         val poseT1 = initialPose.updatePose({ 1.0 }, 1.0).pose
 
         assertAll("pose T1",
-            { assertThat("position", poseT1.pose.positionDegrees, `is`(equalTo(0.0))) },
-            { assertThat("velocity", poseT1.pose.velocityDegPerS, `is`(equalTo(0.0))) },
-            { assertThat("accel", poseT1.pose.accelerationDegPerS2, `is`(closeTo(0.25, 0.00001))) },
-            { assertThat("jerk", poseT1.pose.jerkDegPerS3, `is`(closeTo(0.25, 0.00001))) }
+            { assertThat("position", poseT1.pose.positionRad, `is`(equalTo(0.0))) },
+            { assertThat("velocity", poseT1.pose.velocityRadPerS, `is`(equalTo(0.0))) },
+            { assertThat("accel", poseT1.pose.accelerationRadPerS2, `is`(closeTo(0.25, 0.00001))) },
+            { assertThat("jerk", poseT1.pose.jerkRadPerS3, `is`(closeTo(0.25, 0.00001))) }
         )
     }
 
@@ -87,10 +87,10 @@ internal class RotationalPointMassPoseTest {
         val poseT1 = initialPose.updatePose({ 1.0 }, 1.0).pose
 
         assertAll("pose T1",
-            { assertThat("position", poseT1.pose.positionDegrees, `is`(equalTo(0.0))) },
-            { assertThat("velocity", poseT1.pose.velocityDegPerS, `is`(equalTo(0.0))) },
-            { assertThat("accel", poseT1.pose.accelerationDegPerS2, `is`(closeTo(0.5, 0.00001))) },
-            { assertThat("jerk", poseT1.pose.jerkDegPerS3, `is`(closeTo(0.5, 0.00001))) }
+            { assertThat("position", poseT1.pose.positionRad, `is`(equalTo(0.0))) },
+            { assertThat("velocity", poseT1.pose.velocityRadPerS, `is`(equalTo(0.0))) },
+            { assertThat("accel", poseT1.pose.accelerationRadPerS2, `is`(closeTo(0.5, 0.00001))) },
+            { assertThat("jerk", poseT1.pose.jerkRadPerS3, `is`(closeTo(0.5, 0.00001))) }
         )
     }
 
@@ -98,31 +98,31 @@ internal class RotationalPointMassPoseTest {
     fun currentVelocityMadeAvailableToTorqueSource() {
         val initialPose = RotationalPointMassPose(1.0, 1.0, AngularPose())
 
-        val poseT1 = initialPose.updatePose({ currentVelDegPerS ->
-            assertThat(currentVelDegPerS, `is`(equalTo(0.0)))
+        val poseT1 = initialPose.updatePose({ currentVelRadPerS ->
+            assertThat(currentVelRadPerS, `is`(equalTo(0.0)))
 
             1.0
         }, 1.0).pose
 
         assertAll("pose T1",
-            { assertThat("position", poseT1.pose.positionDegrees, `is`(equalTo(0.0))) },
-            { assertThat("velocity", poseT1.pose.velocityDegPerS, `is`(equalTo(0.0))) },
-            { assertThat("accel", poseT1.pose.accelerationDegPerS2, `is`(equalTo(1.0))) },
-            { assertThat("jerk", poseT1.pose.jerkDegPerS3, `is`(equalTo(1.0))) }
+            { assertThat("position", poseT1.pose.positionRad, `is`(equalTo(0.0))) },
+            { assertThat("velocity", poseT1.pose.velocityRadPerS, `is`(equalTo(0.0))) },
+            { assertThat("accel", poseT1.pose.accelerationRadPerS2, `is`(equalTo(1.0))) },
+            { assertThat("jerk", poseT1.pose.jerkRadPerS3, `is`(equalTo(1.0))) }
         )
 
-        val poseT2 = poseT1.updatePose({ currentVelDegPerS ->
+        val poseT2 = poseT1.updatePose({ currentVelRadPerS ->
             // Assert that the provided velocity is the same as that in the resulting new pose
-            assertThat(currentVelDegPerS, `is`(equalTo(1.0)))
+            assertThat(currentVelRadPerS, `is`(equalTo(1.0)))
 
             0.0
         }, 1.0).pose
 
         assertAll("pose T2",
-            { assertThat("position", poseT2.pose.positionDegrees, `is`(equalTo(0.0))) },
-            { assertThat("velocity", poseT2.pose.velocityDegPerS, `is`(equalTo(1.0))) },
-            { assertThat("accel", poseT2.pose.accelerationDegPerS2, `is`(equalTo(0.0))) },
-            { assertThat("jerk", poseT2.pose.jerkDegPerS3, `is`(equalTo(-1.0))) }
+            { assertThat("position", poseT2.pose.positionRad, `is`(equalTo(0.0))) },
+            { assertThat("velocity", poseT2.pose.velocityRadPerS, `is`(equalTo(1.0))) },
+            { assertThat("accel", poseT2.pose.accelerationRadPerS2, `is`(equalTo(0.0))) },
+            { assertThat("jerk", poseT2.pose.jerkRadPerS3, `is`(equalTo(-1.0))) }
         )
     }
 }
