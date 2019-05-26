@@ -10,8 +10,10 @@ enum class CSVColumn(val fieldName: String) {
 
     POSITION_DEG("Position (Deg)"),
     VELOCITY_DEG_PER_S("Velocity (Deg/S)"),
-    ACCEL_DEG_PER_S2("Acceleration (Deg/S^2"),
-    JERK_DEG_PER_S3("Jerk (Deg/S^3)")
+    ACCEL_DEG_PER_S2("Acceleration (Deg/S^2)"),
+    NET_TORQUE_NM("Net Torque (NM)"),
+    JERK_DEG_PER_S3("Jerk (Deg/S^3)"),
+    MOTOR_DUTY_CYCLE("Motor Duty Cycle (%)")
 }
 
 val CSV_COLUMNS = CSVColumn.values().map { it.fieldName }
@@ -33,7 +35,10 @@ fun runSimulation(csv: CSVWriter) {
     for (currentTimeNanos in SIMULATION_TICK_NANOS..SIMULATION_DURATION_NANOS step SIMULATION_TICK_NANOS) {
         val elapsedTimeS = SIMULATION_TICK_NANOS / TimeUnit.SECONDS.toNanos(1).toDouble()
 
-        motorMassPose = motorMassPose.updatePose(simulatedDutyCycleAtTime(currentTimeNanos), elapsedTimeS)
+        val dutyCycle = simulatedDutyCycleAtTime(currentTimeNanos)
+
+        val updatePoseResult = motorMassPose.updatePose(dutyCycle, elapsedTimeS)
+        motorMassPose = updatePoseResult.pose
 
         csv.writeRecord(mapOf(
             CSVColumn.SIMULATION_TIMESTAMP_SECONDS.fieldName to
@@ -41,8 +46,10 @@ fun runSimulation(csv: CSVWriter) {
 
             CSVColumn.POSITION_DEG.fieldName to motorMassPose.pose.positionDegrees,
             CSVColumn.VELOCITY_DEG_PER_S.fieldName to motorMassPose.pose.velocityDegPerS,
+            CSVColumn.NET_TORQUE_NM.fieldName to updatePoseResult.computedTorqueNM,
             CSVColumn.ACCEL_DEG_PER_S2.fieldName to motorMassPose.pose.accelerationDegPerS2,
-            CSVColumn.JERK_DEG_PER_S3.fieldName to motorMassPose.pose.jerkDegPerS3
+            CSVColumn.JERK_DEG_PER_S3.fieldName to motorMassPose.pose.jerkDegPerS3,
+            CSVColumn.MOTOR_DUTY_CYCLE.fieldName to dutyCycle
         ))
     }
 }
