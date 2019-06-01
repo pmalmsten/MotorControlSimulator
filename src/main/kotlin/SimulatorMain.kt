@@ -14,7 +14,7 @@ enum class CSVColumn(val fieldName: String) {
     NET_TORQUE_NM("Net Torque (NM)"),
     JERK_RAD_PER_S3("Jerk (Rad/S^3)"),
     MOTOR_DUTY_CYCLE("Motor Duty Cycle (%)"),
-    SETPOINT_POS_RAD("Setpoint Position (Rad)"),
+    SETPOINT_VEL_RAD_PER_S("Setpoint Velocity (Rad/s)"),
     PID_EVENT_TRIGGERED("PID Event Triggered (Bool)")
 }
 
@@ -36,11 +36,11 @@ fun runSimulation(csv: CSVWriter) {
 
     var motorMassPose = MotorAndRotationalPointMassPose(motor, initialPose)
 
-    var setpointPositionRad = initialPose.pose.positionRad
+    var setpointVelocityRadPerS = initialPose.pose.velocityRadPerS
     var dutyCycle = 0.0
 
     val pidTimer = PeriodicEvent(0.020) {
-        val error = setpointPositionRad - motorMassPose.pose.positionRad
+        val error = setpointVelocityRadPerS - motorMassPose.pose.velocityRadPerS
         val outputDutyCycle = (error * kP).coerceIn(-1.0, 1.0)
 
         PIDUpdate(outputDutyCycle)
@@ -51,7 +51,7 @@ fun runSimulation(csv: CSVWriter) {
         val elapsedTimeS = SIMULATION_TICK_NANOS / TimeUnit.SECONDS.toNanos(1).toDouble()
         val currentTimeS = currentTimeNanos / TimeUnit.SECONDS.toNanos(1).toDouble()
 
-        setpointPositionRad = simulatedSetpointPositionRadAtTime(currentTimeS)
+        setpointVelocityRadPerS = simulatedSetpointVelRadPerSAtTime(currentTimeS)
 
         val pidUpdate = pidTimer.handleSimulationTick(currentTimeNanos)
         if (pidUpdate != null) {
@@ -71,15 +71,15 @@ fun runSimulation(csv: CSVWriter) {
             CSVColumn.ACCEL_RAD_PER_S2.fieldName to motorMassPose.pose.accelerationRadPerS2,
             CSVColumn.JERK_RAD_PER_S3.fieldName to motorMassPose.pose.jerkRadPerS3,
             CSVColumn.MOTOR_DUTY_CYCLE.fieldName to dutyCycle,
-            CSVColumn.SETPOINT_POS_RAD.fieldName to setpointPositionRad,
+            CSVColumn.SETPOINT_VEL_RAD_PER_S.fieldName to setpointVelocityRadPerS,
             CSVColumn.PID_EVENT_TRIGGERED.fieldName to if (pidUpdate != null) 1.0 else 0.0
         ))
     }
 }
 
-fun simulatedSetpointPositionRadAtTime(currentTimeS: Double): Double {
+fun simulatedSetpointVelRadPerSAtTime(currentTimeS: Double): Double {
     return if (currentTimeS >= 1)
-        3000.0
+        1000.0
     else
         0.0
 }
