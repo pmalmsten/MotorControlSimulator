@@ -1,3 +1,4 @@
+import algorithms.normalizeTorqueToDutyCycle
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
@@ -55,7 +56,10 @@ fun runSimulation(csv: CSVWriter) {
 
         val pidUpdate = pidTimer.handleSimulationTick(currentTimeNanos)
         if (pidUpdate != null) {
-            dutyCycle = pidUpdate.dutyCycle
+            dutyCycle = normalizeTorqueToDutyCycle(
+                maxVelocityRadPerS = 2000.0,
+                currentVelocityRadPerS = motorMassPose.pose.velocityRadPerS,
+                desiredTorquePercent = pidUpdate.output)
         }
 
         val updatePoseResult = motorMassPose.updatePose(dutyCycle, elapsedTimeS)
@@ -84,4 +88,4 @@ fun simulatedSetpointVelRadPerSAtTime(currentTimeS: Double): Double {
         0.0
 }
 
-data class PIDUpdate(val dutyCycle: Double)
+data class PIDUpdate(val output: Double)
