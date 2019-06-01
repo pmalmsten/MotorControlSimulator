@@ -15,7 +15,7 @@ enum class CSVColumn(val fieldName: String) {
     NET_TORQUE_NM("Net Torque (NM)"),
     JERK_RAD_PER_S3("Jerk (Rad/S^3)"),
     MOTOR_DUTY_CYCLE("Motor Duty Cycle (%)"),
-    SETPOINT_VEL_RAD_PER_S("Setpoint Velocity (Rad/s)"),
+    SETPOINT_VEL_PERC("Setpoint Velocity (%)"),
     PID_EVENT_TRIGGERED("PID Event Triggered (Bool)")
 }
 
@@ -29,37 +29,38 @@ fun main() {
     }
 }
 
-const val kP = 0.0002
+const val kP = 10
+const val maxVelRadPerS = 2000.0
 
 fun runSimulation(csv: CSVWriter) {
     val initialPose = RotationalPointMassPose(0.3, 0.01, AngularPose())
-    val motor = DCPermanentMagnetMotor(0.3, 2000.0)
+    val motor = DCPermanentMagnetMotor(0.3, maxVelRadPerS)
 
     var motorMassPose = MotorAndRotationalPointMassPose(motor, initialPose)
 
-    var setpointVelocityRadPerS = initialPose.pose.velocityRadPerS
+    var setpointVelocityPercent = initialPose.pose.velocityRadPerS / maxVelRadPerS
     var dutyCycle = 0.0
 
-    val pidTimer = PeriodicEvent(0.020) {
-        val error = setpointVelocityRadPerS - motorMassPose.pose.velocityRadPerS
-        val outputDutyCycle = (error * kP).coerceIn(-1.0, 1.0)
+    val discreteUpdateTimer = PeriodicEvent(0.020) {
+        val percentError = setpointVelocityPercent - (motorMassPose.pose.velocityRadPerS / maxVelRadPerS)
+        val outputDutyCycle = (percentError * kP).coerceIn(-1.0, 1.0)
 
-        PIDUpdate(outputDutyCycle)
+        outputDutyCycle
     }
-    pidTimer.handleSimulationTick(0)
+    discreteUpdateTimer.handleSimulationTick(0)
 
     for (currentTimeNanos in SIMULATION_TICK_NANOS..SIMULATION_DURATION_NANOS step SIMULATION_TICK_NANOS) {
         val elapsedTimeS = SIMULATION_TICK_NANOS / TimeUnit.SECONDS.toNanos(1).toDouble()
         val currentTimeS = currentTimeNanos / TimeUnit.SECONDS.toNanos(1).toDouble()
 
-        setpointVelocityRadPerS = simulatedSetpointVelRadPerSAtTime(currentTimeS)
+        setpointVelocityPercent = simulatedSetpointPercentMaxVelAtTime(currentTimeS)
 
-        val pidUpdate = pidTimer.handleSimulationTick(currentTimeNanos)
-        if (pidUpdate != null) {
+        val output = discreteUpdateTimer.handleSimulationTick(currentTimeNanos)
+        if (output != null) {
             dutyCycle = normalizeTorqueToDutyCycle(
-                maxVelocityRadPerS = 2000.0,
+                maxVelocityRadPerS = maxVelRadPerS,
                 currentVelocityRadPerS = motorMassPose.pose.velocityRadPerS,
-                desiredTorquePercent = pidUpdate.output)
+                desiredTorquePercent = output)
         }
 
         val updatePoseResult = motorMassPose.updatePose(dutyCycle, elapsedTimeS)
@@ -75,15 +76,15 @@ fun runSimulation(csv: CSVWriter) {
             CSVColumn.ACCEL_RAD_PER_S2.fieldName to motorMassPose.pose.accelerationRadPerS2,
             CSVColumn.JERK_RAD_PER_S3.fieldName to motorMassPose.pose.jerkRadPerS3,
             CSVColumn.MOTOR_DUTY_CYCLE.fieldName to dutyCycle,
-            CSVColumn.SETPOINT_VEL_RAD_PER_S.fieldName to setpointVelocityRadPerS,
-            CSVColumn.PID_EVENT_TRIGGERED.fieldName to if (pidUpdate != null) 1.0 else 0.0
+            CSVColumn.SETPOINT_VEL_PERC.fieldName to setpointVelocityPercent,
+            CSVColumn.PID_EVENT_TRIGGERED.fieldName to if (output != null) 1.0 else 0.0
         ))
     }
 }
 
-fun simulatedSetpointVelRadPerSAtTime(currentTimeS: Double): Double {
+fun simulatedSetpointPercentMaxVelAtTime(currentTimeS: Double): Double {
     return if (currentTimeS >= 1)
-        1000.0
+        0.5
     else
         0.0
 }
