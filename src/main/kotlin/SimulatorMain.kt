@@ -15,6 +15,7 @@ enum class CSVColumn(val fieldName: String) {
     NET_TORQUE_NM("Net Torque (NM)"),
     JERK_RAD_PER_S3("Jerk (Rad/S^3)"),
     MOTOR_DUTY_CYCLE("Motor Duty Cycle (%)"),
+    DESIRED_TORQUE("Desired Torque (%)"),
     SETPOINT_VEL_PERC("Setpoint Velocity (%)"),
     PID_EVENT_TRIGGERED("PID Event Triggered (Bool)")
 }
@@ -29,8 +30,12 @@ fun main() {
     }
 }
 
-const val kP = 10
 const val maxVelRadPerS = 2000.0
+
+const val velocityErrorkP = 10 // Request 100% torque per 10% velocity error
+const val velocitykF = 0.05/0.5 // 5% stall torque to balance drag at 50% speed
+
+const val torqueLimitPercent = 1.0 // Never apply more percent torque than this
 
 fun runSimulation(csv: CSVWriter) {
     val initialPose = RotationalPointMassPose(0.3, 0.01, AngularPose())
@@ -43,9 +48,11 @@ fun runSimulation(csv: CSVWriter) {
 
     val discreteUpdateTimer = PeriodicEvent(0.020) {
         val percentError = setpointVelocityPercent - (motorMassPose.pose.velocityRadPerS / maxVelRadPerS)
-        val outputDutyCycle = (percentError * kP).coerceIn(-1.0, 1.0)
+        val velErrorReqTorquePercent = (percentError * velocityErrorkP)
 
-        outputDutyCycle
+        val dragReqTorquePercent = velocitykF * setpointVelocityPercent
+
+        (velErrorReqTorquePercent + dragReqTorquePercent).coerceIn(-torqueLimitPercent, torqueLimitPercent)
     }
     discreteUpdateTimer.handleSimulationTick(0)
 
@@ -76,6 +83,7 @@ fun runSimulation(csv: CSVWriter) {
             CSVColumn.ACCEL_RAD_PER_S2.fieldName to motorMassPose.pose.accelerationRadPerS2,
             CSVColumn.JERK_RAD_PER_S3.fieldName to motorMassPose.pose.jerkRadPerS3,
             CSVColumn.MOTOR_DUTY_CYCLE.fieldName to dutyCycle,
+            CSVColumn.DESIRED_TORQUE.fieldName to output,
             CSVColumn.SETPOINT_VEL_PERC.fieldName to setpointVelocityPercent,
             CSVColumn.PID_EVENT_TRIGGERED.fieldName to if (output != null) 1.0 else 0.0
         ))
@@ -88,5 +96,3 @@ fun simulatedSetpointPercentMaxVelAtTime(currentTimeS: Double): Double {
     else
         0.0
 }
-
-data class PIDUpdate(val output: Double)

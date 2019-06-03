@@ -4,7 +4,7 @@ import java.lang.RuntimeException
 import java.nio.file.Files
 import java.nio.file.Paths
 
-class CSVWriter(val fileName: String,
+class CSVWriter(fileName: String,
                 val fieldNames: List<String>) : Closeable {
 
     private val fileWriter = if (Files.exists(Paths.get(fileName)))
@@ -19,7 +19,7 @@ class CSVWriter(val fileName: String,
     /**
      * Adds a new entry to this CSV file.
      */
-    fun writeRecord(values: Map<String, Any>) {
+    fun writeRecord(values: Map<String, Any?>) {
         if (values.keys != HashSet(fieldNames))
             throw RuntimeException("Given record has keys ${values.keys}, expected keys $fieldNames")
 
