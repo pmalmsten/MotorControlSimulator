@@ -1,3 +1,4 @@
+import algorithms.JerkLimiter
 import algorithms.normalizeTorqueToDutyCycle
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -32,7 +33,7 @@ fun main() {
 
 const val maxVelRadPerS = 2000.0
 
-const val velocityErrorkP = 10 // Request 100% torque per 10% velocity error
+const val velocityErrorkP = 100/10.0 // Request 100% torque per 10% velocity error
 const val velocitykF = 0.05/0.5 // 5% stall torque to balance drag at 50% speed
 
 const val torqueLimitPercent = 1.0 // Never apply more percent torque than this
@@ -45,6 +46,8 @@ fun runSimulation(csv: CSVWriter) {
 
     var setpointVelocityPercent = initialPose.pose.velocityRadPerS / maxVelRadPerS
     var dutyCycle = 0.0
+
+    val jerkLimiter = JerkLimiter(20.0)
 
     val discreteUpdateTimer = PeriodicEvent(0.020) {
         val percentError = setpointVelocityPercent - (motorMassPose.pose.velocityRadPerS / maxVelRadPerS)
@@ -62,12 +65,15 @@ fun runSimulation(csv: CSVWriter) {
 
         setpointVelocityPercent = simulatedSetpointPercentMaxVelAtTime(currentTimeS)
 
-        val output = discreteUpdateTimer.handleSimulationTick(currentTimeNanos)
-        if (output != null) {
+        val desiredTorquePercent = discreteUpdateTimer.handleSimulationTick(currentTimeNanos)
+        if (desiredTorquePercent != null) {
+            val desiredTorquePercentJerkLimited =
+                jerkLimiter.limitJerk(desiredTorquePercent, currentTimeNanos)
+
             dutyCycle = normalizeTorqueToDutyCycle(
                 maxVelocityRadPerS = maxVelRadPerS,
                 currentVelocityRadPerS = motorMassPose.pose.velocityRadPerS,
-                desiredTorquePercent = output)
+                desiredTorquePercent = desiredTorquePercentJerkLimited)
         }
 
         val updatePoseResult = motorMassPose.updatePose(dutyCycle, elapsedTimeS)
@@ -83,9 +89,9 @@ fun runSimulation(csv: CSVWriter) {
             CSVColumn.ACCEL_RAD_PER_S2.fieldName to motorMassPose.pose.accelerationRadPerS2,
             CSVColumn.JERK_RAD_PER_S3.fieldName to motorMassPose.pose.jerkRadPerS3,
             CSVColumn.MOTOR_DUTY_CYCLE.fieldName to dutyCycle,
-            CSVColumn.DESIRED_TORQUE.fieldName to output,
+            CSVColumn.DESIRED_TORQUE.fieldName to desiredTorquePercent,
             CSVColumn.SETPOINT_VEL_PERC.fieldName to setpointVelocityPercent,
-            CSVColumn.PID_EVENT_TRIGGERED.fieldName to if (output != null) 1.0 else 0.0
+            CSVColumn.PID_EVENT_TRIGGERED.fieldName to if (desiredTorquePercent != null) 1.0 else 0.0
         ))
     }
 }
